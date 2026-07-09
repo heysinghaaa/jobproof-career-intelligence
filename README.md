@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobProof
 
-## Getting Started
+JobProof is an explainable career-intelligence app that turns a job description, resume text, and project evidence into a job-specific proof packet.
 
-First, run the development server:
+It solves a real job-search problem: candidates need to show credible project evidence, not just send generic AI-polished resumes.
+
+## What it does
+
+- Extracts role skills from a job description.
+- Compares them with resume/profile text.
+- Matches the role to real portfolio projects.
+- Flags scam or low-trust job-post signals.
+- Generates application bullets and a fit score.
+- Works for free with a deterministic rule engine.
+- Optionally attempts AI-enhanced narrative analysis when the user enters their own API key.
+
+## Structure
+
+- `backend` - Python FastAPI API and explainable analyzer.
+- `src/app` - Next.js frontend product UI.
+- `src/lib` - frontend types and browser fallback analyzer.
+
+## Run frontend
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run backend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload --port 8000
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The frontend falls back to the browser analyzer if the Python backend is not running.

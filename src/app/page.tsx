@@ -1,65 +1,241 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import { analyzeLocally } from "@/lib/localAnalyzer";
+import type { AnalysisReport, AnalyzePayload } from "@/lib/types";
+
+const API_URL = "http://localhost:8000";
+
+const sampleJob = `Frontend Developer - Product Engineering
+We are a product studio hiring a React and Next.js developer to build dashboards, reporting pages, and responsive customer workflows. Required: React, TypeScript, REST APIs, Git, dashboard UI, strong frontend fundamentals. Nice to have: Python or FastAPI exposure, testing mindset, and experience turning Figma designs into production interfaces.`;
+
+const sampleResume = `Piyush Singh is a frontend developer with React, Next.js, TypeScript, JavaScript, REST API integration, dashboard UI, responsive layouts, GitHub projects, and AI evaluation experience. Built Ledgerly, a finance dashboard and invoice tracker; a Next.js portfolio; and Python/Panda3D projects.`;
 
 export default function Home() {
+  const [jobDescription, setJobDescription] = useState(sampleJob);
+  const [resumeText, setResumeText] = useState(sampleResume);
+  const [apiKey, setApiKey] = useState("");
+  const [isKeyAccepted, setIsKeyAccepted] = useState(false);
+  const [useAi, setUseAi] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [source, setSource] = useState<"python" | "browser" | "idle">("idle");
+  const [report, setReport] = useState<AnalysisReport>(() =>
+    analyzeLocally({ job_description: sampleJob, resume_text: sampleResume, use_ai: false }),
+  );
+
+  const canUseAi = useMemo(() => apiKey.startsWith("sk-") && apiKey.length >= 35 && isKeyAccepted, [apiKey, isKeyAccepted]);
+
+  const validateKey = async () => {
+    if (!apiKey.trim()) {
+      setIsKeyAccepted(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/validate-key`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey }),
+      });
+      const data = (await response.json()) as { valid: boolean };
+      setIsKeyAccepted(data.valid);
+      setUseAi(data.valid);
+    } catch {
+      const validShape = apiKey.startsWith("sk-") && apiKey.length >= 35;
+      setIsKeyAccepted(validShape);
+      setUseAi(validShape);
+    }
+  };
+
+  const analyze = async () => {
+    const payload: AnalyzePayload = {
+      job_description: jobDescription,
+      resume_text: resumeText,
+      api_key: canUseAi ? apiKey : undefined,
+      use_ai: canUseAi && useAi,
+    };
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("Backend unavailable");
+      }
+      setReport((await response.json()) as AnalysisReport);
+      setSource("python");
+    } catch {
+      setReport(analyzeLocally(payload));
+      setSource("browser");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="app-shell">
+      <section className="hero-panel">
+        <div className="hero-copy">
+          <p className="eyebrow">Explainable career intelligence</p>
+          <h1>Turn job posts into proof packets.</h1>
+          <p>
+            JobProof helps developers avoid generic AI applications by matching a job description to real project
+            evidence, resume signals, and scam-risk clues. The basic engine is free and transparent; AI mode only
+            unlocks when the user provides their own key.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="mode-card">
+          <span>Current mode</span>
+          <strong>{report.mode === "ai-enhanced" ? "AI enhanced" : "Basic engine"}</strong>
+          <p>{report.ai_note}</p>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="workspace-grid">
+        <aside className="input-panel">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">Inputs</p>
+              <h2>Analyze a role</h2>
+            </div>
+            <button type="button" onClick={analyze} disabled={isLoading}>
+              {isLoading ? "Analyzing..." : "Analyze"}
+            </button>
+          </div>
+
+          <label>
+            Job description
+            <textarea value={jobDescription} onChange={(event) => setJobDescription(event.target.value)} />
+          </label>
+          <label>
+            Resume / profile text
+            <textarea value={resumeText} onChange={(event) => setResumeText(event.target.value)} />
+          </label>
+
+          <div className="api-card">
+            <div>
+              <span>Optional user-owned AI key</span>
+              <p>No key is stored. The app works without it.</p>
+            </div>
+            <input
+              aria-label="User-owned API key"
+              placeholder="sk-..."
+              type="password"
+              value={apiKey}
+              onChange={(event) => {
+                setApiKey(event.target.value);
+                setIsKeyAccepted(false);
+                setUseAi(false);
+              }}
+            />
+            <div className="api-actions">
+              <button type="button" onClick={validateKey}>
+                Validate key
+              </button>
+              <button type="button" disabled={!canUseAi} onClick={() => setUseAi((value) => !value)}>
+                {useAi && canUseAi ? "AI mode on" : "Enable AI mode"}
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <section className="report-panel">
+          <div className="score-card">
+            <div>
+              <p className="eyebrow">{source === "python" ? "Python backend" : source === "browser" ? "Browser fallback" : "Demo report"}</p>
+              <h2>{report.summary}</h2>
+            </div>
+            <div className="score-orb">
+              <span>Fit</span>
+              <strong>{report.score}</strong>
+            </div>
+          </div>
+
+          {report.ai_summary && (
+            <article className="insight-card ai-summary">
+              <h3>AI narrative</h3>
+              <p>{report.ai_summary}</p>
+            </article>
+          )}
+
+          <div className="breakdown-grid">
+            {report.score_breakdown.map((item) => (
+              <article className="breakdown-card" key={item.label}>
+                <span>{item.label}</span>
+                <strong>
+                  {item.value}/{item.max}
+                </strong>
+                <div>
+                  <i style={{ width: `${Math.min((item.value / item.max) * 100, 100)}%` }} />
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="two-column">
+            <SkillList title="Matched skills" items={report.matched_skills} tone="positive" />
+            <SkillList title="Missing signals" items={report.missing_skills} tone="warning" />
+          </div>
+
+          <article className="insight-card">
+            <h3>Recommended proof</h3>
+            <div className="project-list">
+              {report.project_matches.map((project) => (
+                <a href={project.url} target="_blank" rel="noreferrer" key={project.name}>
+                  <strong>{project.name}</strong>
+                  <span>{project.matched_skills.join(" · ")}</span>
+                  <p>{project.proof}</p>
+                </a>
+              ))}
+            </div>
+          </article>
+
+          <div className="two-column">
+            <article className="insight-card">
+              <h3>Application bullets</h3>
+              <ul>
+                {report.application_bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="insight-card">
+              <h3>Job trust signals</h3>
+              {report.scam_signals.length ? (
+                <ul>
+                  {report.scam_signals.map((signal) => (
+                    <li key={signal.code}>{signal.reason}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No major scam indicators found in the supplied job description.</p>
+              )}
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}
+
+function SkillList({ title, items, tone }: { title: string; items: string[]; tone: "positive" | "warning" }) {
+  return (
+    <article className="insight-card">
+      <h3>{title}</h3>
+      <div className="pill-list">
+        {items.length ? (
+          items.map((item) => (
+            <span className={tone} key={item}>
+              {item}
+            </span>
+          ))
+        ) : (
+          <p>Nothing detected yet.</p>
+        )}
+      </div>
+    </article>
   );
 }
