@@ -1,28 +1,13 @@
 {
-  "services": {
-    "frontend": {
-      "root": ".",
-      "framework": "nextjs"
-    },
-    "backend": {
-      "root": "backend",
-      "entrypoint": "main.py"
+  "functions": {
+    "backend/app/main.py": {
+      "runtime": "python3.12"
     }
   },
   "rewrites": [
     {
-      "source": "/api/backend/(.*)?",
-      "destination": {
-        "type": "service",
-        "service": "backend"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "frontend"
-      }
+      "source": "/api/(.*)",
+      "destination": "/backend/app/main.py"
     }
   ]
 }
