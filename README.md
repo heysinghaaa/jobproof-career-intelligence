@@ -24,6 +24,18 @@ It solves a real job-search problem: candidates need to show credible project ev
 
 ```bash
 npm install
+```
+
+To use the local Python backend instead of the browser fallback, create
+`.env.local` with:
+
+```bash
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
+```
+
+Then start the frontend:
+
+```bash
 npm run dev
 ```
 
@@ -38,3 +50,9 @@ uv run uvicorn app.main:app --reload --port 8000
 ```
 
 The frontend falls back to the browser analyzer if the Python backend is not running.
+
+## Deploy
+
+Vercel deploys the Next.js frontend and FastAPI backend as separate services.
+Production browser requests use the same-origin `/api` prefix, which Vercel
+rewrites to the FastAPI service.

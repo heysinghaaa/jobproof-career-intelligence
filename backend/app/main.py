@@ -27,12 +27,12 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/validate-key")
+@app.post("/api/validate-key")
 def validate_key(payload: ValidateKeyPayload) -> dict[str, bool | str]:
     valid_shape = looks_like_openai_key(payload.api_key)
     return {
@@ -41,7 +41,7 @@ def validate_key(payload: ValidateKeyPayload) -> dict[str, bool | str]:
     }
 
 
-@app.post("/analyze")
+@app.post("/api/analyze")
 def analyze_job(payload: AnalyzePayload) -> dict:
     return analyze(
         AnalyzeRequest(

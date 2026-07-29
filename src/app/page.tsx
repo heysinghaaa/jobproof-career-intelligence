@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { analyzeLocally } from "@/lib/localAnalyzer";
 import type { AnalysisReport, AnalyzePayload } from "@/lib/types";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "/api";
 
 const sampleJob = `Frontend Developer - Product Engineering
 We are a product studio hiring a React and Next.js developer to build dashboards, reporting pages, and responsive customer workflows. Required: React, TypeScript, REST APIs, Git, dashboard UI, strong frontend fundamentals. Nice to have: Python or FastAPI exposure, testing mindset, and experience turning Figma designs into production interfaces.`;
