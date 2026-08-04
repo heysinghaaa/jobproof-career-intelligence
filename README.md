@@ -4,6 +4,10 @@ JobProof is an explainable career-intelligence app that turns a job description,
 
 It solves a real job-search problem: candidates need to show credible project evidence, not just send generic AI-polished resumes.
 
+## Live Demo
+
+[Open JobProof](https://jobproof-career-intelligence-gamma.vercel.app/)
+
 ## What it does
 
 - Extracts role skills from a job description.
